@@ -131,8 +131,13 @@ unsigned imx_ddr_size(void)
 	/* The MX6 can do only 3840 MiB of DRAM */
 	if (bits == 32)
 		return 0xf0000000;
-
+/*add by lsb 20191120 DDR256M*/
+#if defined(CONFIG_SYS_BOOT_NAND)
+        return 1 << (bits-1);
+#else
 	return 1 << bits;
+#endif
+/*end add*/
 }
 #endif
 

@@ -12,7 +12,13 @@ int board_video_skip(void)
 {
 	int i;
 	int ret;
-	char const *panel = getenv("panel");
+        /* modify by lsb 20190903 */
+#if 0
+        char const *panel = getenv("panel");
+#else
+        char const *panel = getenv("lcdtype");
+#endif
+
 
 	if (!panel) {
 		for (i = 0; i < display_count; i++) {

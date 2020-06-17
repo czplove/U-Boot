@@ -2007,7 +2007,6 @@ static void *video_logo(void)
 		}
 	} else
 		video_drawstring(VIDEO_INFO_X, VIDEO_INFO_Y, (uchar *) info);
-
 #ifdef CONFIG_CONSOLE_EXTRA_INFO
 	{
 		int i, n =

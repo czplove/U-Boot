@@ -492,6 +492,15 @@ static int should_load_env(void)
 
 static int initr_env(void)
 {
+
+	/* add by lsb 20190902 */
+        char *p = NULL;
+        char bootargs[300] = {0};
+        char displayArgs[300] = {0};
+
+	char lcd_flags = 0;
+        /* end add */
+
 	/* initialize environment */
 	if (should_load_env())
 		env_relocate();
@@ -521,6 +530,92 @@ static int initr_env(void)
 #endif /* CONFIG_I2CFAST */
 #endif /* CONFIG_405GP, CONFIG_405EP */
 #endif /* CONFIG_SYS_EXTBDINFO */
+
+	/* add by lsb 20190902 */
+	 p = getenv("lcdtype");
+
+        if (NULL == p) {
+                printf("*** Warning use default panel:%s ***\n", CONFIG_DISPLAY_LCD_TYPE);
+                p = CONFIG_DISPLAY_LCD_TYPE;
+
+                setenv("lcdtype", (char *)p);
+                saveenv();
+        }
+        printf("LCD type:%s\n", p);
+	if(!strcmp(p, "4.3"))
+        {
+                lcd_flags = 0;
+#ifdef CONFIG_SYS_BOOT_NAND
+		setenv("bootcmd","nand read ${loadaddr} 0xa00000 0xa00000; nand read ${fdt_addr} 0x1400000 0xc800;bootz ${loadaddr} - ${fdt_addr}"); 
+#else
+		setenv("fdt_file", "topeet_emmc_4_3.dtb");
+#endif
+        }
+        else if(!strcmp(p, "7.0"))
+        {
+                lcd_flags = 1;
+#ifdef CONFIG_SYS_BOOT_NAND 
+		setenv("bootcmd","nand read ${loadaddr} 0xa00000 0xa00000; nand read ${fdt_addr} 0x140C800 0xc800;bootz ${loadaddr} - ${fdt_addr}");
+#else
+                setenv("fdt_file", "topeet_emmc_7_0.dtb");
+#endif
+        }
+	else if(!strcmp(p, "10.1"))
+        {
+		lcd_flags = 2;
+#ifdef CONFIG_SYS_BOOT_NAND 
+		setenv("bootcmd","nand read ${loadaddr} 0xa00000 0xa00000; nand read ${fdt_addr} 0x1419000 0xc800;bootz ${loadaddr} - ${fdt_addr}");
+#else
+		setenv("fdt_file", "topeet_emmc_10_1.dtb");
+#endif
+        }
+        else if(!strcmp(p, "1024x600"))
+        {
+		lcd_flags = 3;
+#ifdef CONFIG_SYS_BOOT_NAND 
+		setenv("bootcmd","nand read ${loadaddr} 0xa00000 0xa00000; nand read ${fdt_addr} 0x1425800 0xc800;bootz ${loadaddr} - ${fdt_addr}");
+#else
+		setenv("fdt_file", "topeet_emmc_1024x600.dtb");
+#endif
+        }
+        else if(!strcmp(p, "5.0"))
+        {
+
+		lcd_flags = 4;
+#ifdef CONFIG_SYS_BOOT_NAND 
+		 setenv("bootcmd","nand read ${loadaddr} 0xa00000 0xa00000; nand read ${fdt_addr} 0x1432000 0xc800;bootz ${loadaddr} - ${fdt_addr}");
+#else
+		setenv("fdt_file", "topeet_emmc_5_0.dtb");
+#endif
+        }
+	else if(!strcmp(p, "9.7"))
+        {
+                lcd_flags = 5;
+#ifdef CONFIG_SYS_BOOT_NAND 
+		 setenv("bootcmd","nand read ${loadaddr} 0xa00000 0xa00000; nand read ${fdt_addr} 0x143E800 0xc800;bootz ${loadaddr} - ${fdt_addr}");
+#else
+		setenv("fdt_file", "topeet_emmc_9_7.dtb");
+#endif
+
+        }
+	else if(!strcmp(p, "vga"))
+        {
+#ifdef CONFIG_SYS_BOOT_NAND 
+		 setenv("bootcmd","nand read ${loadaddr} 0xa00000 0xa00000; nand read ${fdt_addr} 0x143E800 0xc800;bootz ${loadaddr} - ${fdt_addr}");
+#else
+		setenv("fdt_file", "topeet_emmc_9_7.dtb");
+#endif
+        }
+
+	else if(!strcmp(p, "hdmi"))
+        {
+#ifdef CONFIG_SYS_BOOT_NAND 
+                 setenv("bootcmd","nand read ${loadaddr} 0xa00000 0xa00000; nand read ${fdt_addr} 0x144B000 0xc800;bootz ${loadaddr} - ${fdt_addr}");
+#else
+                setenv("fdt_file", "topeet_emmc_hdmi.dtb");
+#endif
+        }
+	
 	return 0;
 }
 
