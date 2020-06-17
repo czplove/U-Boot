@@ -221,23 +221,19 @@ int genphy_config_aneg(struct phy_device *phydev)
 int genphy_update_link(struct phy_device *phydev)
 {
 	unsigned int mii_reg;
-
-	/* zuozhongkai 2019/5/20 LAN8720 must software*/
 #ifdef CONFIG_PHY_SMSC
-//#if 0
-	static int lan8720_flag = 0;
-	int bmcr_reg = 0;
-	if (lan8720_flag == 0) {
-		bmcr_reg = phy_read(phydev, MDIO_DEVAD_NONE, MII_BMCR);		/* 读取寄存器BMCR默认值 */
-		phy_write(phydev, MDIO_DEVAD_NONE, MII_BMCR, BMCR_RESET); 	/* 软件复位，自动清零 */
-		while(phy_read(phydev, MDIO_DEVAD_NONE, MII_BMCR) & BMCR_RESET) {
-			udelay(100);			
-		}
-		phy_write(phydev, MDIO_DEVAD_NONE, MII_BMCR, bmcr_reg); 	/* BMCR写入原来的值 */
-		lan8720_flag = 1;
-	}
-#endif
+        static int lan8720_flag = 0;
+        int bmcr_reg = 0;
 
+        if(lan8720_flag == 0)
+        {
+                bmcr_reg = phy_read(phydev, MDIO_DEVAD_NONE, MII_BMCR);   /* Read the default value of BCMR register */
+                phy_write(phydev, MDIO_DEVAD_NONE, MII_BMCR, BMCR_RESET); /* Software reset*/
+                mdelay(10);
+                phy_write(phydev, MDIO_DEVAD_NONE, MII_BMCR, bmcr_reg);   /* Write the default value to BCMR register */
+                lan8720_flag = 1;
+        }
+#endif
 	/*
 	 * Wait if the link is up, and autonegotiation is in progress
 	 * (ie - we're capable and it's not done)
@@ -776,6 +772,7 @@ int phy_reset(struct phy_device *phydev)
 		debug("PHY reset failed\n");
 		return -1;
 	}
+
 #ifdef CONFIG_PHY_RESET_DELAY
 	udelay(CONFIG_PHY_RESET_DELAY);	/* Intel LXT971A needs this */
 #endif
