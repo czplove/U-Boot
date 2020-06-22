@@ -32,7 +32,7 @@
 #define PHYS_SDRAM_SIZE		SZ_256M
 #define CONFIG_BOOTARGS_CMA_SIZE   "cma=96M "
 #else
-#define PHYS_SDRAM_SIZE		SZ_256M
+#define PHYS_SDRAM_SIZE		SZ_512M
 #define CONFIG_BOOTARGS_CMA_SIZE   ""
 /* DCDC used on 14x14 EVK, no PMIC */
 #undef CONFIG_LDO_BYPASS_CHECK
@@ -89,8 +89,8 @@
 
 #define CONFIG_SYS_MMC_IMG_LOAD_PART	1
 
-#ifdef CONFIG_SYS_BOOT_NAND
-#define CONFIG_MFG_NAND_PARTITION "mtdparts=gpmi-nand:64m(boot),32m(kernel),16m(dtb),-(rootfs) "
+#ifdef CONFIG_SYS_USE_NAND
+#define CONFIG_MFG_NAND_PARTITION "mtdparts=gpmi-nand:4m(u-boot),128k(env),1m(logo),1m(dtb),8m(kernel),-(rootfs) "
 #else
 #define CONFIG_MFG_NAND_PARTITION ""
 #endif
@@ -110,19 +110,24 @@
 	"initrd_high=0xffffffff\0" \
 	"bootcmd_mfg=run mfgtool_args;bootz ${loadaddr} ${initrd_addr} ${fdt_addr};\0" \
 
-#if defined(CONFIG_SYS_BOOT_NAND)
+#if defined(CONFIG_SYS_USE_NAND) && !defined(CONFIG_SYS_BOOT_SD)
 #define CONFIG_EXTRA_ENV_SETTINGS \
 	CONFIG_MFG_ENV_SETTINGS \
-	"panel=TFT7016\0" \
+	"panel=TFT43AB\0" \
 	"fdt_addr=0x83000000\0" \
 	"fdt_high=0xffffffff\0"	  \
 	"console=ttymxc0\0" \
-	"bootargs=console=ttymxc0,115200 ubi.mtd=3 "  \
-		"root=ubi0:rootfs rw rootfstype=ubifs "		     \
+	"splashimage=0x88000000\0" \
+	"splashpos=m,m\0" \
+	"logo_offset=0x420000\0" \
+	"logo_size=0x100000\0" \
+	"fdt_offset=0x520000\0" \
+	"bootargs=console=ttymxc0,115200 ubi.mtd=5 "  \
+		"root=ubi0:rootfs rootfstype=ubifs "		     \
 		CONFIG_BOOTARGS_CMA_SIZE \
-		"mtdparts=gpmi-nand:64m(boot),32m(kernel),16m(dtb),-(rootfs)\0"\
-	"bootcmd=nand read ${loadaddr} 0x4000000 0x800000;"\
-		"nand read ${fdt_addr} 0x6000000 0x100000;"\
+		"mtdparts=gpmi-nand:4m(u-boot),128k(env),1m(logo),1m(dtb),8m(kernel),-(rootfs)\0" \
+	"bootcmd=nand read ${loadaddr} 0x620000 0x800000;"\
+		"nand read ${fdt_addr} ${fdt_offset} 0x20000;"\
 		"bootz ${loadaddr} - ${fdt_addr}\0"
 
 #else
@@ -137,13 +142,17 @@
 	"fdt_addr=0x83000000\0" \
 	"boot_fdt=try\0" \
 	"ip_dyn=yes\0" \
-	"panel=TFT7016\0" \
+	"panel=TFT43AB\0" \
+	"splashimage=0x88000000\0" \
+	"splashpos=m,m\0" \
+	"logo_file=alientek.bmp\0" \
 	"mmcdev="__stringify(CONFIG_SYS_MMC_ENV_DEV)"\0" \
 	"mmcpart=" __stringify(CONFIG_SYS_MMC_IMG_LOAD_PART) "\0" \
 	"mmcroot=" CONFIG_MMCROOT " rootwait rw\0" \
 	"mmcautodetect=yes\0" \
 	"mmcargs=setenv bootargs console=${console},${baudrate} " \
 		CONFIG_BOOTARGS_CMA_SIZE \
+		CONFIG_MFG_NAND_PARTITION \
 		"root=${mmcroot}\0" \
 	"loadbootscript=" \
 		"fatload mmc ${mmcdev}:${mmcpart} ${loadaddr} ${script};\0" \
@@ -245,11 +254,12 @@
 #ifdef CONFIG_SYS_BOOT_QSPI
 #define CONFIG_FSL_QSPI
 #define CONFIG_ENV_IS_IN_SPI_FLASH
-#elif defined CONFIG_SYS_BOOT_NAND
-#define CONFIG_SYS_USE_NAND
+#elif defined(CONFIG_SYS_USE_NAND) && !defined(CONFIG_SYS_BOOT_SD)
 #define CONFIG_ENV_IS_IN_NAND
 #else
+#ifndef CONFIG_SYS_BOOT_SD
 #define CONFIG_FSL_QSPI
+#endif
 #define CONFIG_ENV_IS_IN_MMC
 #endif
 
@@ -302,8 +312,8 @@
 #define CONFIG_ENV_SPI_MAX_HZ		CONFIG_SF_DEFAULT_SPEED
 #elif defined(CONFIG_ENV_IS_IN_NAND)
 #undef CONFIG_ENV_SIZE
-#define CONFIG_ENV_OFFSET		(60 << 20)
-#define CONFIG_ENV_SECT_SIZE		(128 << 10)
+#define CONFIG_ENV_OFFSET		SZ_4M
+#define CONFIG_ENV_SECT_SIZE		(64 << 10)
 #define CONFIG_ENV_SIZE			CONFIG_ENV_SECT_SIZE
 #endif
 
@@ -328,6 +338,7 @@
 #define CONFIG_CMD_MII
 #define CONFIG_FEC_MXC
 #define CONFIG_MII
+
 #define CONFIG_FEC_ENET_DEV		1
 
 #if (CONFIG_FEC_ENET_DEV == 0)
@@ -352,7 +363,7 @@
 #ifdef CONFIG_VIDEO
 #define CONFIG_CFB_CONSOLE
 #define CONFIG_VIDEO_MXS
-#define CONFIG_VIDEO_LOGO
+/*#define CONFIG_VIDEO_LOGO*/
 #define CONFIG_VIDEO_SW_CURSOR
 #define CONFIG_VGA_AS_SINGLE_DEVICE
 #define CONFIG_SYS_CONSOLE_IS_IN_ENV
@@ -365,8 +376,6 @@
 #define CONFIG_IMX_VIDEO_SKIP
 #endif
 #endif
-
-#define CONFIG_FAT_WRITE /* 使能fatwrite命令 */
 
 #define CONFIG_IOMUX_LPSR
 
